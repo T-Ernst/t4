@@ -220,7 +220,7 @@ namespace Mono.TextTemplating.Build
 
 		// TODO: cache warnings
 		[MessagePackObject]
-		public class TransformTemplate
+		public class TransformTemplate : ITemplateState
 		{
 			[Key (0)]
 			public string InputFile { get; set; }
@@ -228,6 +228,8 @@ namespace Mono.TextTemplating.Build
 			public string OutputFile { get; set; }
 			[Key (2)]
 			public List<string> Dependencies { get; set; }
+			[Key (3)]
+			public string ExtensionOverride { get; set; }
 
 			public bool IsStale (Func<string, DateTime?> getFileWriteTime, TaskLoggingHelper logger)
 			{
@@ -256,7 +258,7 @@ namespace Mono.TextTemplating.Build
 
 		// TODO: cache warnings
 		[MessagePackObject]
-		public class PreprocessedTemplate
+		public class PreprocessedTemplate : ITemplateState
 		{
 			[Key (0)]
 			public string InputFile { get; set; }
@@ -266,6 +268,10 @@ namespace Mono.TextTemplating.Build
 			public List<string> Dependencies { get; set; }
 			[Key (3)]
 			public List<string> References { get; set; }
+			[Key (4)]
+			public string Namespace { get; set; }
+			[Key (5)]
+			public string ExtensionOverride { get; set; }
 
 			public bool IsStale (Func<string, DateTime?> getFileWriteTime, TaskLoggingHelper logger)
 			{
@@ -292,6 +298,13 @@ namespace Mono.TextTemplating.Build
 				// the generator, they're just text values to be returned
 				return false;
 			}
+		}
+
+		public interface ITemplateState
+		{
+			string OutputFile { get; set; }
+
+			string ExtensionOverride { get; set; }
 		}
 
 #if !NETCOREAPP2_1_OR_GREATER

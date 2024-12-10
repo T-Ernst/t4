@@ -40,6 +40,9 @@ namespace Mono.TextTemplating.Build
 		[Required]
 		public string IntermediateDirectory { get; set; }
 
+		[Required]
+		public string ProjectDirectory { get; set; }
+
 		[Output]
 		public ITaskItem[] RequiredAssemblies { get; set; }
 
@@ -54,6 +57,7 @@ namespace Mono.TextTemplating.Build
 			bool success = true;
 
 			Directory.CreateDirectory (IntermediateDirectory);
+			Directory.CreateDirectory (ProjectDirectory);
 
 			string buildStateFilename = Path.Combine (IntermediateDirectory, "t4-build-state.msgpack");
 
@@ -101,16 +105,20 @@ namespace Mono.TextTemplating.Build
 				foreach (var ppt in PreprocessTemplates) {
 					string inputFile = ppt.ItemSpec;
 					string outputFile;
+
+					// Metadata only supported for legacy processing.
+					string extensionOverride = null;
 					if (UseLegacyPreprocessingMode) {
-						//TODO: OutputFilePath, OutputFileName
-						outputFile = Path.ChangeExtension (inputFile, ".cs");
+						outputFile = GetOutputPathViaMetadata (ppt, ".cs", out extensionOverride);
 					} else {
-						//FIXME: this could cause collisions. generate a path based on relative path and link metadata
 						outputFile = Path.Combine (IntermediateDirectory, Path.ChangeExtension (inputFile, ".cs"));
 					}
+
 					buildState.PreprocessTemplates.Add (new TemplateBuildState.PreprocessedTemplate {
 						InputFile = inputFile,
-						OutputFile = outputFile
+						OutputFile = outputFile,
+						Namespace = CalculateNamespace (outputFile),
+						ExtensionOverride = extensionOverride
 					});
 				}
 			}
@@ -118,14 +126,14 @@ namespace Mono.TextTemplating.Build
 			if (TransformTemplates != null) {
 				buildState.TransformTemplates = new List<TemplateBuildState.TransformTemplate> ();
 				foreach (var tt in TransformTemplates) {
-					//TODO: OutputFilePath, OutputFileName
-					//var outputFilePathMetadata = tt.TryGetMetadata("OutputFilePath");
-					//var outputFileNameMetadata = tt.TryGetMetadata("OutputFileName");
 					string inputFile = tt.ItemSpec;
-					string outputFile = Path.ChangeExtension (inputFile, ".txt");
+
+					var outputFile = GetOutputPathViaMetadata (tt, ".txt", out var extensionOverride);
+
 					buildState.TransformTemplates.Add (new TemplateBuildState.TransformTemplate {
 						InputFile = inputFile,
-						OutputFile = outputFile
+						OutputFile = outputFile,
+						ExtensionOverride = extensionOverride
 					});
 				}
 			}
@@ -152,13 +160,36 @@ namespace Mono.TextTemplating.Build
 			//RequiredAssemblies
 			//settings.Debug
 			//settings.Log
-			//metadata to override output name, class name and namespace
 
 			SaveBuildState (buildState, buildStateFilename, msgPackOptions);
 
 			//var stateJson = MessagePackSerializer.ConvertToJson (File.ReadAllBytes (buildStateFilename), msgPackOptions);
 
 			return success;
+		}
+
+		string GetOutputPathViaMetadata (ITaskItem taskItem, string extensionDefault, out string extensionOverride)
+		{
+			var inputFile = taskItem.ItemSpec;
+			extensionOverride = null;
+			if (!taskItem.TryGetMetadata ("OutputFileName", out var outputFile)) {
+				var name = Path.GetFileNameWithoutExtension (inputFile);
+				outputFile = Path.ChangeExtension (name, extensionDefault);
+			} else {
+				extensionOverride = Path.GetExtension (outputFile);
+			}
+
+			// If set, it is relative to the ProjectDirectory.
+			if (taskItem.TryGetMetadata ("OutputDirectory", out var outputDirectory)) {
+				outputFile = Path.Combine (ProjectDirectory, outputDirectory, outputFile);
+			} else if (taskItem.TryGetMetadata ("OutputFilePath", out outputDirectory)) {
+				outputFile = Path.Combine (ProjectDirectory, outputDirectory, outputFile);
+			} else { // otherwise use the same directory as the template.
+				var parentDir = GetDirectoryFullPath (inputFile);
+				outputFile = Path.Combine (parentDir, outputFile);
+			}
+
+			return outputFile;
 		}
 
 		static TaskItem ConstructOutputItem (string outputFile, string inputFile, List<string> itemDependencies)
@@ -171,6 +202,24 @@ namespace Mono.TextTemplating.Build
 			}
 
 			return item;
+		}
+
+		static string GetDirectoryFullPath (string inputFile)
+		{
+			var fullPath = Path.GetFullPath (inputFile);
+			return Path.GetDirectoryName (fullPath);
+		}
+
+		static string GetRelativePath (string relativeTo, string path)
+		{
+#if !NETCOREAPP2_1_OR_GREATER
+			// Implement a basic version of GetRelativePath for .NET Framework
+			Uri relativeToUri = new Uri(relativeTo);
+			Uri pathUri = new Uri(path);
+			return Uri.UnescapeDataString(relativeToUri.MakeRelativeUri(pathUri).ToString().Replace('/', Path.DirectorySeparatorChar));
+#else
+			return Path.GetRelativePath (relativeTo, path);
+#endif
 		}
 
 		bool AddParameters (TemplateBuildState buildState)
@@ -278,6 +327,13 @@ namespace Mono.TextTemplating.Build
 			}
 
 			return !hasErrors;
+		}
+
+		string CalculateNamespace (string outputFile)
+		{
+			string relativePath = GetRelativePath (UseLegacyPreprocessingMode ? ProjectDirectory : IntermediateDirectory, outputFile);
+			string namespacePath = Path.GetDirectoryName (relativePath).Replace (Path.DirectorySeparatorChar, '.');
+			return string.IsNullOrEmpty (namespacePath) ? DefaultNamespace : $"{DefaultNamespace}.{namespacePath}";
 		}
 
 		TemplateBuildState LoadBuildState (string filePath, MessagePackSerializerOptions options)
