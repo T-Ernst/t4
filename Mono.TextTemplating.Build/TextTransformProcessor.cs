@@ -219,7 +219,7 @@ namespace Mono.TextTemplating.Build
 			public DateTime? GetWriteTime (string filepath)
 			{
 				if (!writeTimeCache.TryGetValue (filepath, out var value)) {
-					writeTimeCache.Add (filepath, value = File.Exists(filepath)? File.GetLastWriteTime (filepath) : null);
+					writeTimeCache.Add (filepath, value = File.Exists (filepath) ? File.GetLastWriteTime (filepath) : null);
 				}
 				return value;
 			}

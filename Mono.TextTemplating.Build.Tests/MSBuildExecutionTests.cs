@@ -35,7 +35,7 @@ namespace Mono.TextTemplating.Tests
 
 			var instance = project.Build ("Build");
 
-			var generatedFilePath = project.DirectoryPath["foo.txt"].AssertTextStartsWith("Hello 2019!");
+			var generatedFilePath = project.DirectoryPath["foo.txt"].AssertTextStartsWith ("Hello 2019!");
 
 			instance.AssertSingleItem ("GeneratedTemplates", withFullPath: generatedFilePath);
 			instance.AssertNoItems ("PreprocessedTemplates");
@@ -120,13 +120,13 @@ namespace Mono.TextTemplating.Tests
 
 			project.Restore ();
 
-			var fooGenerated = project.DirectoryPath ["foo.txt"];
-			var fooTemplate = project.DirectoryPath ["foo.tt"];
-			var barGenerated = project.DirectoryPath ["bar.txt"];
-			var barTemplate = project.DirectoryPath ["bar.tt"];
-			var includeFile = project.DirectoryPath ["helper.ttinclude"];
+			var fooGenerated = project.DirectoryPath["foo.txt"];
+			var fooTemplate = project.DirectoryPath["foo.tt"];
+			var barGenerated = project.DirectoryPath["bar.txt"];
+			var barTemplate = project.DirectoryPath["bar.tt"];
+			var includeFile = project.DirectoryPath["helper.ttinclude"];
 
-			void ExecuteAndValidate()
+			void ExecuteAndValidate ()
 			{
 				var instance = project.Build ("TransformTemplates");
 

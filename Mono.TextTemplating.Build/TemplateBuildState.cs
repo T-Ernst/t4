@@ -39,7 +39,7 @@ namespace Mono.TextTemplating.Build
 		public List<TransformTemplate> TransformTemplates { get; set; }
 		[Key (9)]
 		public List<Parameter> Parameters { get; set; }
-		[Key(10)]
+		[Key (10)]
 		public string PreprocessTargetRuntimeIdentifier { get; set; }
 
 		internal (List<TransformTemplate> transforms, List<PreprocessedTemplate> preprocessed) GetStaleAndNewTemplates (
@@ -70,7 +70,7 @@ namespace Mono.TextTemplating.Build
 							// if it's up to date, use the values from the previous run
 							t.Dependencies = pt.Dependencies;
 							t.OutputFile = pt.OutputFile;
-							logger.LogMessageFromResources (MessageImportance.Low, nameof(Messages.SkippingTransformUpToDate), t.InputFile, t.OutputFile);
+							logger.LogMessageFromResources (MessageImportance.Low, nameof (Messages.SkippingTransformUpToDate), t.InputFile, t.OutputFile);
 						} else {
 							staleOrNewTransforms.Add (t);
 						}
@@ -91,7 +91,7 @@ namespace Mono.TextTemplating.Build
 						t.Dependencies = pt.Dependencies;
 						t.References = pt.Dependencies;
 						t.OutputFile = pt.OutputFile;
-						logger.LogMessageFromResources (MessageImportance.Low, nameof(Messages.SkippingPreprocessedOutputUpToDate), t.InputFile, t.OutputFile);
+						logger.LogMessageFromResources (MessageImportance.Low, nameof (Messages.SkippingPreprocessedOutputUpToDate), t.InputFile, t.OutputFile);
 					} else {
 						staleOrNewPreprocessed.Add (t);
 					}
@@ -114,7 +114,7 @@ namespace Mono.TextTemplating.Build
 			}
 
 			if (lastSession.DefaultNamespace != session.DefaultNamespace) {
-				logger.LogMessageFromResources (MessageImportance.Low, nameof(Messages.RegeneratingAllDefaultNamespaceChanged));
+				logger.LogMessageFromResources (MessageImportance.Low, nameof (Messages.RegeneratingAllDefaultNamespaceChanged));
 				return regenAll;
 			}
 
@@ -125,36 +125,36 @@ namespace Mono.TextTemplating.Build
 
 			// this is probably impossible as the previous session is loaded from the intermediate directory, but let's be safe
 			if (lastSession.IntermediateDirectory != session.IntermediateDirectory) {
-				logger.LogMessageFromResources (MessageImportance.Low, nameof(Messages.RegeneratingAllIntermediateDirChanged));
+				logger.LogMessageFromResources (MessageImportance.Low, nameof (Messages.RegeneratingAllIntermediateDirChanged));
 				return regenAll;
 			}
 
 			// this is probably impossible as the previous session is loaded from the intermediate directory, but let's be safe
 			if (!ListsEqual (lastSession.AssemblyReferences, session.AssemblyReferences)) {
 				// references only affect transformed templates
-				logger.LogMessageFromResources (MessageImportance.Low, nameof(Messages.RegeneratingTransformsAsmRefsChanged));
+				logger.LogMessageFromResources (MessageImportance.Low, nameof (Messages.RegeneratingTransformsAsmRefsChanged));
 				return regenTransforms;
 			}
 
 			if (!ListsEqual (lastSession.ReferencePaths, session.ReferencePaths)) {
 				// however, reference paths may affect the "requiredreferences" of preprocessed templates as well
-				logger.LogMessageFromResources (MessageImportance.Low, nameof(Messages.RegeneratingAllReferencePathsChanged));
+				logger.LogMessageFromResources (MessageImportance.Low, nameof (Messages.RegeneratingAllReferencePathsChanged));
 				return regenAll;
 			}
 
 			if (!ListsEqual (lastSession.IncludePaths, session.IncludePaths)) {
-				logger.LogMessageFromResources (MessageImportance.Low, nameof(Messages.RegeneratingAllIncludePathsChanged));
+				logger.LogMessageFromResources (MessageImportance.Low, nameof (Messages.RegeneratingAllIncludePathsChanged));
 				return regenAll;
 			}
 
 			if (!ListsEqual (lastSession.DirectiveProcessors, session.DirectiveProcessors)) {
-				logger.LogMessageFromResources (MessageImportance.Low, nameof(Messages.RegeneratingAllDirectiveProcessorsChanged));
+				logger.LogMessageFromResources (MessageImportance.Low, nameof (Messages.RegeneratingAllDirectiveProcessorsChanged));
 				return regenAll;
 			}
 
 			if (!ListsEqual (lastSession.Parameters, session.Parameters)) {
 				// parameters can affect includes and references in precoressed templates
-				logger.LogMessageFromResources (MessageImportance.Low, nameof(Messages.RegeneratingAllParametersChanged));
+				logger.LogMessageFromResources (MessageImportance.Low, nameof (Messages.RegeneratingAllParametersChanged));
 				return regenAll;
 			}
 
@@ -232,19 +232,19 @@ namespace Mono.TextTemplating.Build
 			public bool IsStale (Func<string, DateTime?> getFileWriteTime, TaskLoggingHelper logger)
 			{
 				if (getFileWriteTime (OutputFile) is not DateTime outputTime) {
-					logger.LogMessageFromResources (MessageImportance.Low, nameof(Messages.RegeneratingTransformMissingOutputFile), InputFile, OutputFile);
+					logger.LogMessageFromResources (MessageImportance.Low, nameof (Messages.RegeneratingTransformMissingOutputFile), InputFile, OutputFile);
 					return true;
 				}
 
 				if (getFileWriteTime (InputFile) is not DateTime inputTime || inputTime > outputTime) {
-					logger.LogMessageFromResources (MessageImportance.Low, nameof(Messages.RegeneratingTransformOutputFileOlderThanTemplate), InputFile, OutputFile);
+					logger.LogMessageFromResources (MessageImportance.Low, nameof (Messages.RegeneratingTransformOutputFileOlderThanTemplate), InputFile, OutputFile);
 					return true;
 				}
 
 				if (Dependencies != null) {
 					foreach (var dep in Dependencies) {
 						if (getFileWriteTime (dep) is not DateTime depTime || depTime > outputTime) {
-							logger.LogMessageFromResources (MessageImportance.Low, nameof(Messages.RegeneratingTransformOutputFileOlderThanDependency), InputFile, OutputFile, dep);
+							logger.LogMessageFromResources (MessageImportance.Low, nameof (Messages.RegeneratingTransformOutputFileOlderThanDependency), InputFile, OutputFile, dep);
 							return true;
 						}
 					}
@@ -270,19 +270,19 @@ namespace Mono.TextTemplating.Build
 			public bool IsStale (Func<string, DateTime?> getFileWriteTime, TaskLoggingHelper logger)
 			{
 				if (getFileWriteTime (OutputFile) is not DateTime outputTime) {
-					logger.LogMessageFromResources (MessageImportance.Low, nameof(Messages.RegeneratingPreprocessedOutputFileMissing), InputFile, OutputFile);
+					logger.LogMessageFromResources (MessageImportance.Low, nameof (Messages.RegeneratingPreprocessedOutputFileMissing), InputFile, OutputFile);
 					return true;
 				}
 
 				if (getFileWriteTime (InputFile) is not DateTime inputTime || inputTime > outputTime) {
-					logger.LogMessageFromResources (MessageImportance.Low, nameof(Messages.RegeneratingPreprocessedOutputFileOlderThanTemplate), InputFile, OutputFile);
+					logger.LogMessageFromResources (MessageImportance.Low, nameof (Messages.RegeneratingPreprocessedOutputFileOlderThanTemplate), InputFile, OutputFile);
 					return true;
 				}
 
 				if (Dependencies != null) {
 					foreach (var dep in Dependencies) {
 						if (getFileWriteTime (dep) is not DateTime depTime || depTime > outputTime) {
-							logger.LogMessageFromResources (MessageImportance.Low, nameof(Messages.RegeneratingPreprocessedOutputFileOlderThanDependency), InputFile, OutputFile, dep);
+							logger.LogMessageFromResources (MessageImportance.Low, nameof (Messages.RegeneratingPreprocessedOutputFileOlderThanDependency), InputFile, OutputFile, dep);
 							return true;
 						}
 					}

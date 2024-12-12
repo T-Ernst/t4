@@ -22,14 +22,14 @@ namespace Mono.TextTemplating.Build
 		public TextTransform () : base (Messages.ResourceManager) { }
 
 		public string DefaultNamespace { get; set; }
-		public ITaskItem [] PreprocessTemplates { get; set; }
-		public ITaskItem [] TransformTemplates { get; set; }
-		public ITaskItem [] IncludePaths { get; set; }
-		public ITaskItem [] DirectiveProcessors { get; set; }
-		public ITaskItem [] AssemblyReferences { get; set; }
-		public ITaskItem [] ReferencePaths { get; set; }
+		public ITaskItem[] PreprocessTemplates { get; set; }
+		public ITaskItem[] TransformTemplates { get; set; }
+		public ITaskItem[] IncludePaths { get; set; }
+		public ITaskItem[] DirectiveProcessors { get; set; }
+		public ITaskItem[] AssemblyReferences { get; set; }
+		public ITaskItem[] ReferencePaths { get; set; }
 
-		public ITaskItem [] ParameterValues { get; set; }
+		public ITaskItem[] ParameterValues { get; set; }
 
 		public bool PreprocessOnly { get; set; }
 		public bool UseLegacyPreprocessingMode { get; set; }
@@ -41,13 +41,13 @@ namespace Mono.TextTemplating.Build
 		public string IntermediateDirectory { get; set; }
 
 		[Output]
-		public ITaskItem [] RequiredAssemblies { get; set; }
+		public ITaskItem[] RequiredAssemblies { get; set; }
 
 		[Output]
-		public ITaskItem [] TransformTemplateOutput { get; set; }
+		public ITaskItem[] TransformTemplateOutput { get; set; }
 
 		[Output]
-		public ITaskItem [] PreprocessedTemplateOutput { get; set; }
+		public ITaskItem[] PreprocessedTemplateOutput { get; set; }
 
 		public override bool Execute ()
 		{
@@ -67,7 +67,7 @@ namespace Mono.TextTemplating.Build
 			if (TransformOutOfDateOnly) {
 				previousBuildState = LoadBuildState (buildStateFilename, msgPackOptions);
 				if (previousBuildState != null) {
-					Log.LogMessageFromResources (MessageImportance.Low, nameof(Messages.LoadedStateFile), buildStateFilename);
+					Log.LogMessageFromResources (MessageImportance.Low, nameof (Messages.LoadedStateFile), buildStateFilename);
 				}
 			}
 
@@ -204,8 +204,8 @@ namespace Mono.TextTemplating.Build
 					directiveName = directiveMetadata;
 				}
 
-				if(paramVal is null) {
-					Log.LogWarningFromResources (nameof(Messages.ArgumentNoValue), par);
+				if (paramVal is null) {
+					Log.LogWarningFromResources (nameof (Messages.ArgumentNoValue), par);
 					success = false;
 					continue;
 				}
@@ -236,10 +236,10 @@ namespace Mono.TextTemplating.Build
 				var name = dirItem.ItemSpec;
 				string className = null, assembly = null;
 
-				if (name.IndexOf('!') > -1) {
+				if (name.IndexOf ('!') > -1) {
 					var split = name.Split ('!');
 					if (split.Length != 3) {
-						Log.LogErrorFromResources (nameof(Messages.DirectiveProcessorDoesNotHaveThreeValues), name);
+						Log.LogErrorFromResources (nameof (Messages.DirectiveProcessorDoesNotHaveThreeValues), name);
 						return false;
 					}
 					//empty values for these are fine; they may get set through metadata
@@ -261,12 +261,12 @@ namespace Mono.TextTemplating.Build
 				}
 
 				if (string.IsNullOrEmpty (className)) {
-					Log.LogErrorFromResources (nameof(Messages.DirectiveProcessorNoClass), name);
+					Log.LogErrorFromResources (nameof (Messages.DirectiveProcessorNoClass), name);
 					hasErrors = true;
 				}
 
 				if (string.IsNullOrEmpty (assembly)) {
-					Log.LogErrorFromResources (nameof(Messages.DirectiveProcessorNoAssembly), name);
+					Log.LogErrorFromResources (nameof (Messages.DirectiveProcessorNoAssembly), name);
 					hasErrors = true;
 				}
 
@@ -282,17 +282,17 @@ namespace Mono.TextTemplating.Build
 
 		TemplateBuildState LoadBuildState (string filePath, MessagePackSerializerOptions options)
 		{
-			if (!File.Exists(filePath)) {
+			if (!File.Exists (filePath)) {
 				return null;
 			}
 
 			try {
 				using var stream = File.OpenRead (filePath);
 
-				var state =  MessagePackSerializer.Deserialize<TemplateBuildState> (stream, options);
+				var state = MessagePackSerializer.Deserialize<TemplateBuildState> (stream, options);
 
 				if (state.FormatVersion != TemplateBuildState.CurrentFormatVersion) {
-					Log.LogMessageFromResources (MessageImportance.Low, nameof(Messages.BuildStateFormatChanged));
+					Log.LogMessageFromResources (MessageImportance.Low, nameof (Messages.BuildStateFormatChanged));
 				}
 
 				return state;
@@ -301,7 +301,7 @@ namespace Mono.TextTemplating.Build
 				// show a meaningful error message without internal details
 				Log.LogWarningFromResources (nameof (Messages.BuildStateLoadFailed));
 				// log a stack trace so it can be reported
-				Log.LogMessageFromResources (MessageImportance.Normal, nameof(Messages.InternalException), ex);
+				Log.LogMessageFromResources (MessageImportance.Normal, nameof (Messages.InternalException), ex);
 			}
 
 			return null;
@@ -317,9 +317,9 @@ namespace Mono.TextTemplating.Build
 				// show a meaningful error message without internal details
 				Log.LogWarningFromResources (nameof (Messages.BuildStateSaveFailed));
 				// log a stack trace so it can be reported
-				Log.LogMessageFromResources (MessageImportance.Normal, nameof(Messages.InternalException), ex);
+				Log.LogMessageFromResources (MessageImportance.Normal, nameof (Messages.InternalException), ex);
 				try {
-					if (File.Exists(filePath)) {
+					if (File.Exists (filePath)) {
 						File.Delete (filePath);
 					}
 				}
